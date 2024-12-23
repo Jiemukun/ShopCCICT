@@ -6,6 +6,7 @@
 ?>
 
 <?php include_once('layouts/header.php'); ?>
+<?php ?>
 <?php 
 
 if(!isset($_SESSION['logged_in'])){
