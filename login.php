@@ -11,35 +11,44 @@ if(isset($_SESSION['logged_in'])){
     exit;
 }
 
-if (!isset($_POST['login_btn'])) {
-    header('location: login.php?error=Something went wrong');
-}
 
-$email = $_POST['email'];
-$password = $_POST['password'];
+if (isset($_POST['login_btn'])) {
+    $email = $_POST['email'];
+    $password = $_POST['password'];
 
-$stmt = $db->prepare("SELECT user_id, user_name, user_email, user_password FROM users WHERE user_email = ? LIMIT 1");
-$db->bind_param($stmt, 's', $email); 
+   
+    $stmt = $db->prepare("SELECT user_id, user_name, user_email, user_password FROM users WHERE user_email = ? LIMIT 1");
+    $db->bind_param($stmt, 's', $email); 
 
-if ($db->execute($stmt)) {
-    $result = $db->fetch_assoc_result($stmt);
-    
-    if (!$result) {
-        header('location: login.php?error=Invalid credentials');
+   
+    if ($db->execute($stmt)) {
+        $result = $db->fetch_assoc_result($stmt);
+
+       
+        if ($result) {
+            
+            if (password_verify($password, $result['user_password'])) {
+                
+                $_SESSION['user_id'] = $result['user_id'];
+                $_SESSION['user_name'] = $result['user_name'];
+                $_SESSION['user_email'] = $result['user_email'];
+                $_SESSION['logged_in'] = true;
+                //TIMEOUT FOUL!!!
+                $_SESSION['last_activity'] = time();
+                //
+                header('location: account.php?login_success=Logged in successfully');
+            } else {
+                
+                header('location: login.php?error=Invalid credentials');
+            }
+        } else {
+            
+            header('location: login.php?error=Invalid credentials');
+        }
+    } else {
+        
+        header('location: login.php?error=Something went wrong');
     }
-
-    if (!password_verify($password, $result['user_password'])) {
-        header('location: login.php?error=Invalid credentials');
-    }
-
-    $_SESSION['user_id'] = $result['user_id'];
-    $_SESSION['user_name'] = $result['user_name'];
-    $_SESSION['user_email'] = $result['user_email'];
-    $_SESSION['logged_in'] = true;
-    //TIMEOUT FOUL!!!
-    $_SESSION['last_activity'] = time();
-    //
-    header('location: account.php?login_success=Logged in successfully');
 }
 ?>
 
